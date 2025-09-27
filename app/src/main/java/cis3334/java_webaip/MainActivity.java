@@ -24,6 +24,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -73,7 +74,61 @@ public class MainActivity extends AppCompatActivity {
 
     private void getStudentAPI() {
         // ======================= Student must add code here to get JSON data from an API =======================
-        textViewStatus.setText("Not implemented yet ....");
+//        textViewStatus.setText("Not implemented yet ....");
+        String url = "https://api.citybik.es/v2/networks";
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
+                Request.Method.GET, url, null,
+                response -> {
+                    Moshi moshi = new Moshi.Builder().build();
+                    JsonAdapter<StudentAPIResponse> adapter = moshi.adapter(StudentAPIResponse.class);
+                    try {
+                        StudentAPIResponse studentAPIResponse = adapter.fromJson(response.toString());
+
+                        if (studentAPIResponse != null &&
+                                studentAPIResponse.networks != null &&
+                                !studentAPIResponse.networks.isEmpty()) {
+
+                            String firstNetworkName = studentAPIResponse.networks.get(0).name;
+                            textViewStatus.setText(firstNetworkName);
+
+                        } else {
+                            textViewStatus.setText("No networks found in response.");
+                        }
+
+                        /*
+                        if (studentAPIResponse != null &&
+                                studentAPIResponse.networks != null &&
+                                !studentAPIResponse.networks.isEmpty()) {
+
+                            // Instead of showing only the first network name:
+                            Map<String, Integer> counts = studentAPIResponse.countNetworksByCountry();
+
+                            // Build a string for the TextView
+                            StringBuilder sb = new StringBuilder("Networks by country:\n");
+                            for (Map.Entry<String, Integer> entry : counts.entrySet()) {
+                                sb.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
+                            }
+
+                            textViewStatus.setText(sb.toString());
+
+                        } else {
+                            textViewStatus.setText("No networks found in response.");
+                        }
+                        */
+
+                    } catch (IOException e) {
+                        textViewStatus.setText("Parse exception: " + e.getMessage());
+                        Log.e("CIS 3334", "Moshi parsing failed", e);
+                    }
+                },
+                error -> {
+                    textViewStatus.setText("Volley error: " + error.toString());
+                    Log.e("CIS 3334", "Volley error on getStudentAPI", error);
+                }
+        );
+
+        mRequestQueue.add(jsonObjectRequest);
     }
 
     private void getDogFact() {
